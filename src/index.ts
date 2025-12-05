@@ -2,10 +2,8 @@ import * as core from '@actions/core';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { Octokit } from '@octokit/rest';
 import * as github from '@actions/github';
 import { exec } from '@actions/exec';
-import  { createActionAuth } from '@octokit/auth-action';
 import { getTunnelsWithTimeout } from './get-tunnels';
 import { getOpenConnections } from './get-open-connections';
 
@@ -42,14 +40,12 @@ if (!uniqueAllowedUsers.length) {
 }
 core.info(`Allowed users: ${uniqueAllowedUsers.join(',')}`);
 
-const octokit = new Octokit({
-  authStrategy: createActionAuth
-});
+const octokit = github.getOctokit(core.getInput('GITHUB_TOKEN') || process.env.GITHUB_TOKEN!);
 const allowedKeys = [];
 for (const allowedUser of uniqueAllowedUsers) {
   if (allowedUser) {
     try {
-      let keys = await octokit.users.listPublicKeysForUser({
+      let keys = await octokit.rest.users.listPublicKeysForUser({
         username: allowedUser
       });
       for (const item of keys.data) {
